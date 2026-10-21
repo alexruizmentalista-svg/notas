@@ -1470,6 +1470,22 @@ window.__CACHE_MARK = 'v11';
             <button class="seq-toggle" id="remoteNew" style="width:100%; padding:8px 6px;">Nuevo código</button>
           </div>
         </div>
+        <div id="remoteLockInfo" class="pn-help" style="margin:4px 0 6px;"></div>
+        <button class="seq-toggle" id="remoteUnlock" style="width:100%; margin-bottom:8px; display:none;">Aceptar otro móvil</button>
+        <div class="pn-sep"></div>
+        <div style="font-size:13px; font-weight:700; margin:8px 0 6px;">Desde el móvil del espectador</div>
+        <div class="pn-help rm-steps">
+          <b>1.</b> Que escanee el QR con la cámara, o que acerque su iPhone a tu pegatina NFC, o mándale el enlace. Se le abre una nota en blanco igual que la de Notas.<br>
+          <b>2.</b> Opcional: en Safari, Compartir → <b>Añadir a pantalla de inicio</b>, y le queda como una app con el icono de Notas.<br>
+          <b>3.</b> Lo que escriba, dibuje o el color que elija te llega aquí, al reloj y al PeekSmith.<br>
+          <b>4.</b> Solo se conecta el primer móvil que abre el enlace. Para el siguiente espectador, pulsa <b>Aceptar otro móvil</b>.<br>
+          <b>Ojo:</b> si pulsas «Nuevo código», los enlaces y pegatinas anteriores dejan de funcionar.
+        </div>
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <button class="seq-toggle" id="remoteCopy" style="flex:1; margin:0;">Copiar enlace</button>
+          <button class="primary" id="remoteNFC" style="flex:1; height:40px; margin:0;">Grabar en NFC</button>
+        </div>
+        <div id="remoteNFCMsg" class="pn-help" style="margin-top:6px;"></div>
         <div class="pn-sep"></div>
         <div style="font-size:12px; color:#8a8a8e; margin:6px 0 6px;">En directo</div>
         <div style="display:flex; gap:10px; align-items:flex-start;">
@@ -4144,7 +4160,19 @@ window.__CACHE_MARK = 'v11';
   function remoteSend(data){
     if (!SPECTATOR_ID || !window.MQTTMini) return;
     if (!remoteNet){ remoteNet = new MQTTMini.Multi(REMOTE_BROKERS); }
-    try { remoteNet.publish(remoteTopic(SPECTATOR_ID), JSON.parse(JSON.stringify(data))); } catch(e){}
+    try { const o = JSON.parse(JSON.stringify(data)); o.d = remoteDevId(); remoteNet.publish(remoteTopic(SPECTATOR_ID), o); } catch(e){}
+  }
+  function remoteDevId(){
+    let d = ''; try { d = localStorage.getItem('notasDev') || ''; } catch(e){}
+    if (!d){ d = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); try { localStorage.setItem('notasDev', d); } catch(e){} }
+    return d;
+  }
+  // Solo se escucha al primer móvil que se conecta; los demás se ignoran hasta «Aceptar otro móvil»
+  var remoteLock = '', remoteLockT = 0, remoteNetN = 0;
+  function remoteLockUI(){
+    const e = document.getElementById('remoteLockInfo'); if (!e) return;
+    e.innerHTML = remoteLock ? '🔒 Conectado a <b>un solo móvil</b>. Si otro abre el enlace, no te llega nada.' : 'Esperando al móvil del espectador: el primero que abra el enlace se queda conectado.';
+    document.getElementById('remoteUnlock').style.display = remoteLock ? '' : 'none';
   }
   // --- espejo en el panel ---
   let rmStrokes = [];
@@ -4171,6 +4199,14 @@ window.__CACHE_MARK = 'v11';
   function remoteHandle(topic, m){
     if (!m || !m.k) return;
     delete m._m;
+    const now = Date.now();
+    if (remoteLock && now - remoteLockT > 30 * 60 * 1000) remoteLock = '';   // 30 min sin nada: se libera solo
+    if (m.d){
+      if (!remoteLock){ remoteLock = m.d; persistState(); remoteLockUI(); postNative({ cmd: 'haptic' }); }
+      else if (m.d !== remoteLock) return;
+      remoteLockT = now;
+    }
+    delete m.d;
     remoteMirror(m);
     if (m.k === 'color'){
       const n = colorMatch.on ? (colorMatch.n[m.name] || 0) : 0;
@@ -4211,7 +4247,18 @@ window.__CACHE_MARK = 'v11';
       if (remoteOn) remoteStart(); else remoteStop();
       persistState(); renderRemoteUI();
     });
+    document.getElementById('remoteUnlock').addEventListener('click', function(){ remoteLock = ''; persistState(); remoteLockUI(); showToast('Listo para otro móvil'); });
+    document.getElementById('remoteCopy').addEventListener('click', function(){
+      const url = remoteURL();
+      try { navigator.clipboard.writeText(url).then(function(){ showToast('Enlace copiado'); }, function(){ showToast(url); }); } catch(e){ showToast(url); }
+    });
+    document.getElementById('remoteNFC').addEventListener('click', function(){
+      document.getElementById('remoteNFCMsg').textContent = 'Acerca la pegatina NFC a la parte de arriba del iPhone…';
+      postNative({ cmd: 'nfcWrite', url: remoteURL() });
+    });
+    window.__onNFC = function(ok, msg){ const e = document.getElementById('remoteNFCMsg'); if (e){ e.textContent = (ok ? '✓ ' : '') + msg + (ok ? '. Cuando el espectador acerque su iPhone, le saldrá el aviso para abrir la nota.' : ''); e.style.color = ok ? '#34C759' : '#ff453a'; } };
     document.getElementById('remoteNew').addEventListener('click', function(){
+      remoteLock = '';
       remoteId = newRemoteId(); persistState(); remoteStart(); renderRemoteUI(); showToast('Código nuevo');
     });
     document.getElementById('remoteShare').addEventListener('click', function(){
@@ -4220,7 +4267,7 @@ window.__CACHE_MARK = 'v11';
       try { navigator.clipboard.writeText(url); showToast('Enlace copiado'); } catch(e){ showToast(url); }
     });
     if (remoteOn) remoteStart();
-    renderRemoteUI();
+    renderRemoteUI(); remoteLockUI();
   }
   // --- arranque del modo espectador ---
   function spectatorInit(){
@@ -5050,7 +5097,7 @@ function clockGroup(str, stroke, width){
     let json;
     try {
       json = JSON.stringify({ v: 1, notes: savedNotes.map(cleanNoteForSave), sequenceMode: sequenceMode, darkMode: darkMode,
-                              startScreen: startScreen, decoys: decoysText, noteCount: noteCount, colorMatch: colorMatch, mathMode: mathMode, clWatch: clWatch, depthOn: depthOn, carrier: carrierName, welcomeSeen: welcomeSeen, peekOn: peek.on, peekVib: peek.vib, peekLive: peek.live, remoteOn: remoteOn, remoteId: remoteId, preMigrated: true });
+                              startScreen: startScreen, decoys: decoysText, noteCount: noteCount, colorMatch: colorMatch, mathMode: mathMode, clWatch: clWatch, depthOn: depthOn, carrier: carrierName, welcomeSeen: welcomeSeen, peekOn: peek.on, peekVib: peek.vib, peekLive: peek.live, remoteOn: remoteOn, remoteId: remoteId, remoteLock: remoteLock, preMigrated: true });
     } catch(e){ return; }
     try { localStorage.setItem(STORAGE_KEY, json); } catch(e){}
     try {
@@ -5083,6 +5130,7 @@ function clockGroup(str, stroke, width){
       if (st && st.welcomeSeen) welcomeSeen = true;
       if (st && typeof st.peekOn === 'boolean'){ peek.on = st.peekOn; peek.vib = st.peekVib !== false; peek.live = st.peekLive !== false; }
       if (st && typeof st.remoteId === 'string') remoteId = st.remoteId;
+      if (st && typeof st.remoteLock === 'string'){ remoteLock = st.remoteLock; remoteLockT = Date.now(); }
       if (st && st.colorMatch && st.colorMatch.n){ colorMatch.on = !!st.colorMatch.on; Object.assign(colorMatch.n, st.colorMatch.n); }
     } catch(e){}
     appEl.classList.toggle('dark-theme', darkMode);
