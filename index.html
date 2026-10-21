@@ -4122,7 +4122,7 @@ window.__CACHE_MARK = 'v11';
   // ===== Modo "Pantalla negra" =====
 
   // ===== Espectador a distancia (web del espectador ↔ esta app, por MQTT público) =====
-  var REMOTE_BASE = 'https://notas-web-aesn.netlify.app/';
+  var REMOTE_BASE = 'https://alexruizmentalista-svg.github.io/notas/';
   var REMOTE_BROKERS = (function(){ try { const b = new URLSearchParams(location.search).get('broker'); if (b) return b.split(','); } catch(e){} return ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt']; })();
   var SPECTATOR_ID = (function(){ try { const r = new URLSearchParams(location.search).get('r'); if (r && /^[A-Za-z0-9]{4,16}$/.test(r)){ try { localStorage.setItem('notasSpectR', r); } catch(e){} return r; } if (window.__SPECTATOR_ONLY){ const s = localStorage.getItem('notasSpectR'); if (s) return s; } } catch(e){} return null; })();
   var SPECTATOR = !!SPECTATOR_ID || !!window.__SPECTATOR_ONLY;
