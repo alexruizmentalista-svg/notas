@@ -15,6 +15,23 @@
 <meta name="robots" content="noindex">
 <script>window.__SPECTATOR_ONLY = true;</script>
 <style>
+  html, body { height: 100%; }
+  #app { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; height: auto !important; max-width: none !important; margin: 0 !important; }
+  #diag { position: fixed; left: 8px; right: 8px; top: 120px; z-index: 9999; background: rgba(0,0,0,.85); color: #0f0; font: 13px/1.4 monospace; padding: 10px; border-radius: 10px; white-space: pre-wrap; pointer-events: none; }
+</style>
+<script>
+if (/[?&]diag/.test(location.search)) document.addEventListener('DOMContentLoaded', function(){
+  var d = document.createElement('div'); d.id = 'diag'; document.body.appendChild(d);
+  function up(){
+    var a = document.getElementById('app'), r = a ? a.getBoundingClientRect() : {};
+    var t = document.createElement('div'); t.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom)'; document.body.appendChild(t); var sab = t.offsetHeight; t.remove();
+    d.textContent = 'screen ' + screen.width + 'x' + screen.height + '\ninner ' + innerWidth + 'x' + innerHeight + '\nvisual ' + (window.visualViewport ? Math.round(visualViewport.height) : '-') +
+      '\nclientH ' + document.documentElement.clientHeight + '\napp ' + Math.round(r.top) + '..' + Math.round(r.bottom) + '\nstandalone ' + navigator.standalone + ' ' + matchMedia('(display-mode: standalone)').matches + '\nsafe-bottom ' + sab;
+  }
+  up(); setInterval(up, 1000);
+});
+</script>
+<style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
   html, body {
     margin: 0; padding: 0; height: 100%; width: 100%;
