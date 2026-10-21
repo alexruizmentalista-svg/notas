@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Fotos</title>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  :root{ --bg:#000; --fg:#fff; --mute:#8e8e93; --gap:2px; --blue:#0a84ff;
+    --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px); }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; user-select:none;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;overscroll-behavior:none;}
+  .hidden{display:none!important;}
+  .btn{appearance:none;border:0;border-radius:14px;background:var(--blue);color:#fff;
+    font-size:18px;font-weight:600;padding:15px 26px;}
+  .btn.sec{background:#1c1c1e;color:var(--blue);}
+
+  /* Landing */
+  #landing{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:20px;padding:34px;text-align:center;}
+  #landing h1{font-size:28px;margin:0;font-weight:700;letter-spacing:-.4px;}
+  #landing p{color:var(--mute);font-size:15px;line-height:1.5;margin:0;max-width:300px;}
+
+  /* Preparación del espectador */
+  #setup{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:20px;padding:32px;text-align:center;z-index:50;}
+  #setup h1{font-size:26px;font-weight:700;margin:0;}
+  #setup p{color:var(--mute);font-size:15px;line-height:1.5;margin:0;max-width:300px;}
+  #file{display:none;}
+  .count{color:var(--mute);font-size:13px;}
+
+  /* Galería */
+  #gallery{position:fixed;inset:0;display:flex;flex-direction:column;background:#000;}
+  .navbar{padding:calc(var(--safe-top) + 8px) 16px 8px;flex:0 0 auto;}
+  .navbar h2{font-size:32px;font-weight:700;margin:0;letter-spacing:-.5px;}
+  .navbar .sub{font-size:13px;font-weight:600;color:var(--mute);margin-top:2px;}
+  .grid{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+    display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap);align-content:start;
+    padding-bottom:calc(var(--safe-bot) + 60px);}
+  .cell{position:relative;width:100%;aspect-ratio:1/1;background:#1c1c1e;overflow:hidden;}
+  .cell img{width:100%;height:100%;object-fit:cover;display:block;}
+  .tabbar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--safe-bot) + 52px);
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,0));padding-bottom:var(--safe-bot);}
+  .tabbar .seg{background:rgba(120,120,128,.24);border-radius:20px;padding:7px 4px;display:flex;}
+  .tabbar .seg span{padding:5px 14px;border-radius:16px;color:#fff;font-weight:600;}
+  .tabbar .seg span.on{background:rgba(120,120,128,.5);}
+
+  /* Visor */
+  #viewer{position:fixed;inset:0;background:#000;z-index:30;display:flex;flex-direction:column;}
+  .vtop{padding:calc(var(--safe-top) + 6px) 14px 6px;display:flex;align-items:center;justify-content:space-between;flex:0 0 auto;}
+  .vtop .back{color:var(--blue);font-size:17px;font-weight:600;}
+  .vtop .title{font-size:13px;font-weight:600;text-align:center;line-height:1.2;}
+  .vtop .title .d{color:var(--mute);font-weight:400;font-size:11px;}
+  .track{flex:1 1 auto;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
+  .track::-webkit-scrollbar{display:none;}
+  .slide{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;}
+  .slide img{max-width:100%;max-height:100%;object-fit:contain;}
+  .vbot{height:calc(var(--safe-bot) + 70px);flex:0 0 auto;}
+
+  /* Receptor (lo que ve el mago) */
+  #receiver{position:fixed;inset:0;background:#0b0b0c;z-index:40;display:flex;flex-direction:column;}
+  #recImg{flex:1 1 auto;display:flex;align-items:center;justify-content:center;background:#000;}
+  #recImg img{max-width:100%;max-height:100%;object-fit:contain;}
+  #recImg .empty{color:var(--mute);font-size:15px;padding:30px;text-align:center;}
+  .recbar{flex:0 0 auto;padding:14px 18px calc(var(--safe-bot) + 16px);background:#141416;border-top:1px solid #2a2a2c;}
+  .recbar .now{font-size:13px;color:var(--mute);}
+  .recbar .chosen{font-size:22px;font-weight:700;color:#30d158;margin-top:2px;}
+  .recbar .secs{font-size:12px;color:var(--mute);}
+
+  /* Enlace / QR */
+  #share{position:fixed;inset:0;background:#000;z-index:45;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:18px;padding:30px;text-align:center;}
+  #share h2{margin:0;font-size:22px;font-weight:700;}
+  #share p{color:var(--mute);font-size:14px;margin:0;max-width:320px;line-height:1.5;}
+  #qr{width:220px;height:220px;background:#fff;border-radius:16px;padding:10px;}
+  #qr img{width:100%;height:100%;}
+  .linkbox{background:#1c1c1e;border-radius:12px;padding:12px 14px;font-size:13px;color:#ddd;word-break:break-all;max-width:340px;}
+
+  .dot{position:fixed;top:calc(var(--safe-top) + 8px);right:12px;width:10px;height:10px;border-radius:50%;
+    background:#ff453a;z-index:70;box-shadow:0 0 6px rgba(0,0,0,.6);}
+  .dot.on{background:#30d158;}
+</style>
+</head>
+<body>
+
+<!-- Elegir rol -->
+<div id="landing">
+  <h1>Galería espejo</h1>
+  <p>Tú (el mago) creas la sesión en tu móvil. Luego abres el enlace en el móvil del espectador.</p>
+  <button class="btn" id="beReceiver">Soy el mago · recibir aquí</button>
+  <input id="codeIn" placeholder="o pon el código de sesión" autocapitalize="characters"
+    style="background:#1c1c1e;border:0;border-radius:12px;color:#fff;font-size:17px;padding:14px 16px;text-align:center;width:240px;">
+  <button class="btn sec" id="beSender">Entrar como espectador</button>
+</div>
+
+<!-- Compartir enlace (en el móvil del mago) -->
+<div id="share" class="hidden">
+  <h2>Abre esto en el móvil del espectador</h2>
+  <canvas id="qr" width="220" height="220"></canvas>
+  <div class="linkbox" id="linkText"></div>
+  <button class="btn sec" id="copyLink">Copiar enlace</button>
+  <p>Cuando lo abras ahí, prepara su galería y dale el móvil. Verás aquí lo que mira.</p>
+  <button class="btn" id="goReceive">Ya está · ver en directo</button>
+</div>
+
+<!-- Preparación del espectador -->
+<div id="setup" class="hidden">
+  <h1>Fotos</h1>
+  <p>Elige las fotos (arrastra para coger muchas). El espectador verá su galería.</p>
+  <button class="btn" id="pick">Preparar la galería</button>
+  <div class="count" id="count"></div>
+  <button class="btn sec hidden" id="start">Empezar · darle el móvil</button>
+  <input type="file" id="file" accept="image/*" multiple>
+  <p class="count">No se guarda nada. Al cerrar la pestaña desaparece.</p>
+</div>
+
+<!-- Galería (espectador) -->
+<div id="gallery" class="hidden">
+  <div class="navbar"><h2>Fototeca</h2><div class="sub" id="range"></div></div>
+  <div class="grid" id="grid"></div>
+  <div class="tabbar"><div class="seg"><span>Años</span><span>Meses</span><span class="on">Todo</span></div></div>
+</div>
+
+<!-- Visor (espectador) -->
+<div id="viewer" class="hidden">
+  <div class="vtop"><div class="back" id="vback">‹ Fototeca</div>
+    <div class="title"><div id="vname">Foto</div><div class="d" id="vdate"></div></div>
+    <div style="width:70px"></div></div>
+  <div class="track" id="track"></div>
+  <div class="vbot"></div>
+</div>
+
+<!-- Receptor (mago) -->
+<div id="receiver" class="hidden">
+  <div id="recImg"><div class="empty" id="recEmpty">Esperando a que el espectador abra su galería…</div></div>
+  <div class="recbar">
+    <div class="now" id="recNow">—</div>
+    <div class="chosen" id="recChosen">—</div>
+    <div class="secs" id="recSecs"></div>
+  </div>
+</div>
+
+<div class="dot" id="dot"></div>
+
+<script>
+(function(){
+  var BROKER = "wss://broker.hivemq.com:8884/mqtt";   // público; cámbialo por el tuyo para más fiabilidad
+  var qs = new URLSearchParams(location.hash.slice(1));
+  var room = qs.get('r');
+  var role = qs.get('role');   // 'send' | null
+  var client=null, topic='', connected=false;
+  var dot=document.getElementById('dot');
+  function setDot(on){ connected=on; dot.classList.toggle('on',on); }
+
+  function connect(cb){
+    topic = 'galeria-espejo/'+room;
+    client = mqtt.connect(BROKER, {clientId:'ge_'+Math.random().toString(16).slice(2), keepalive:30, reconnectPeriod:2000});
+    client.on('connect', function(){ setDot(true); if(cb) cb(); });
+    client.on('reconnect', function(){ setDot(false); });
+    client.on('close', function(){ setDot(false); });
+    client.on('message', function(t,p){ onMessage(t, p); });
+  }
+  function pub(kind, obj){ if(client&&connected){ try{ client.publish(topic+'/'+kind, JSON.stringify(obj)); }catch(e){} } }
+
+  // ---------- Landing ----------
+  document.getElementById('beReceiver').onclick = function(){
+    room = Math.random().toString(36).slice(2,7).toUpperCase();
+    var url = location.origin+location.pathname+'#r='+room+'&role=send';
+    document.getElementById('linkText').textContent = url;
+    try{ QRCode.toCanvas(document.getElementById('qr'), url, {width:220, margin:1}); }catch(e){}
+    show('share');
+    connect(function(){ client.subscribe(topic+'/#'); });
+  };
+  document.getElementById('beSender').onclick = function(){
+    var code = (document.getElementById('codeIn').value||'').trim().toUpperCase();
+    if(!code){ document.getElementById('codeIn').focus(); return; }
+    room = code; role='send';
+    startSender();
+  };
+  document.getElementById('copyLink').onclick = function(){
+    var t=document.getElementById('linkText').textContent;
+    try{ navigator.clipboard.writeText(t); this.textContent='Copiado ✓'; }catch(e){}
+  };
+  document.getElementById('goReceive').onclick = function(){ show('receiver'); };
+
+  function show(id){
+    ['landing','share','setup','gallery','viewer','receiver'].forEach(function(x){
+      document.getElementById(x).classList.toggle('hidden', x!==id);
+    });
+  }
+
+  // ---------- Router por URL ----------
+  if(room && role==='send'){ startSender(); }
+  else if(room){ /* receptor con sala en URL */ show('share'); document.getElementById('linkText').textContent=location.href; connect(function(){client.subscribe(topic+'/#');}); }
+  else { show('landing'); }
+
+  // ================= ESPECTADOR =================
+  var photos=[], dwell={}, curIndex=-1, curStart=0;
+  function startSender(){
+    show('setup');
+    if(!client) connect(function(){ client.subscribe(topic+'/hello'); });
+  }
+  var fileInput=document.getElementById('file');
+  document.getElementById('pick').onclick=function(){ fileInput.click(); };
+  fileInput.onchange=function(){
+    var files=Array.prototype.slice.call(fileInput.files||[]);
+    if(!files.length) return;
+    files.forEach(function(f){ photos.push({url:URL.createObjectURL(f), file:f, name:cleanName(f.name), date:f.lastModified}); });
+    photos.sort(function(a,b){ return a.date-b.date; });
+    document.getElementById('count').textContent=photos.length+' fotos listas';
+    document.getElementById('start').classList.remove('hidden');
+  };
+  document.getElementById('start').onclick=function(){
+    if(!photos.length){ fileInput.click(); return; }
+    buildGrid(); show('gallery');
+    try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }catch(e){}
+  };
+  function cleanName(n){ return (n||'Foto').replace(/\.[a-z0-9]+$/i,'').replace(/[_\-]+/g,' ').slice(0,40); }
+  function fmtDate(ms){ var d=new Date(ms),di=['dom','lun','mar','mié','jue','vie','sáb'],
+    me=['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];
+    return di[d.getDay()]+' '+d.getDate()+' '+me[d.getMonth()]+' '+d.getFullYear(); }
+
+  function buildGrid(){
+    var grid=document.getElementById('grid'); grid.innerHTML='';
+    photos.forEach(function(p,i){ var c=document.createElement('div'); c.className='cell';
+      var im=document.createElement('img'); im.src=p.url; im.loading='lazy'; c.appendChild(im);
+      c.onclick=function(){ openViewer(i); }; grid.appendChild(c); });
+    if(photos.length) document.getElementById('range').textContent=fmtDate(photos[0].date)+' – '+fmtDate(photos[photos.length-1].date);
+    var g=document.getElementById('grid'); requestAnimationFrame(function(){ g.scrollTop=g.scrollHeight; });
+  }
+  var track=document.getElementById('track');
+  function openViewer(start){
+    track.innerHTML='';
+    photos.forEach(function(p){ var s=document.createElement('div'); s.className='slide';
+      var im=document.createElement('img'); im.src=p.url; s.appendChild(im); track.appendChild(s); });
+    show('viewer');
+    requestAnimationFrame(function(){ track.scrollLeft=start*track.clientWidth; setCurrent(start); });
+  }
+  document.getElementById('vback').onclick=function(){ commitDwell(); curIndex=-1; show('gallery'); };
+  var st; track.addEventListener('scroll',function(){ clearTimeout(st);
+    st=setTimeout(function(){ setCurrent(Math.round(track.scrollLeft/track.clientWidth)); },60); });
+
+  function setCurrent(i){
+    if(i===curIndex) return; commitDwell(); curIndex=i; curStart=Date.now();
+    var p=photos[i]; if(!p) return;
+    document.getElementById('vname').textContent=p.name;
+    document.getElementById('vdate').textContent=fmtDate(p.date);
+    streamCurrent();
+  }
+  function commitDwell(){ if(curIndex>=0&&curStart){ dwell[curIndex]=(dwell[curIndex]||0)+(Date.now()-curStart); } curStart=Date.now(); }
+  function chosenIndex(){ commitDwell(); var best=-1,bt=-1; for(var k in dwell){ if(dwell[k]>bt){bt=dwell[k];best=+k;} } return best; }
+
+  // enviar la foto actual (reducida) + la elegida
+  var lastSent=-1;
+  function streamCurrent(){
+    var p=photos[curIndex]; if(!p) return;
+    downscale(p, function(dataURL){
+      var ci=chosenIndex(), cp=photos[ci];
+      pub('view', { name:p.name, img:dataURL, chosen: cp?cp.name:'', secs: cp?Math.round((dwell[ci]||0)/1000):0 });
+    });
+  }
+  setInterval(function(){ if(curIndex>=0){ var ci=chosenIndex(), cp=photos[ci];
+    pub('state', { chosen: cp?cp.name:'', secs: cp?Math.round((dwell[ci]||0)/1000):0, now: photos[curIndex]?photos[curIndex].name:'' }); } }, 1000);
+
+  function downscale(p, cb){
+    if(p._small){ cb(p._small); return; }
+    var img=new Image(); img.onload=function(){
+      var max=460, s=Math.min(1, max/Math.max(img.width,img.height));
+      var cv=document.createElement('canvas'); cv.width=Math.round(img.width*s); cv.height=Math.round(img.height*s);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      try{ p._small=cv.toDataURL('image/jpeg',0.5); }catch(e){ p._small=''; }
+      cb(p._small);
+    }; img.src=p.url;
+  }
+
+  // ================= MAGO (receptor) =================
+  function onMessage(t, payload){
+    var kind=t.split('/').pop(); var d;
+    try{ d=JSON.parse(payload.toString()); }catch(e){ return; }
+    if(kind==='view'){
+      var box=document.getElementById('recImg');
+      if(d.img){ box.innerHTML=''; var im=new Image(); im.src=d.img; box.appendChild(im); }
+      document.getElementById('recNow').textContent='Mirando: '+(d.name||'—');
+      if(d.chosen){ document.getElementById('recChosen').textContent=d.chosen;
+        document.getElementById('recSecs').textContent=d.secs?('lleva '+d.secs+' s'):''; }
+    } else if(kind==='state'){
+      if(d.now) document.getElementById('recNow').textContent='Mirando: '+d.now;
+      if(d.chosen){ document.getElementById('recChosen').textContent=d.chosen;
+        document.getElementById('recSecs').textContent=d.secs?('lleva '+d.secs+' s'):''; }
+    }
+  }
+
+  window.addEventListener('pagehide',function(){ photos.forEach(function(p){ try{URL.revokeObjectURL(p.url);}catch(e){} }); });
+})();
+</script>
+</body>
+</html>
