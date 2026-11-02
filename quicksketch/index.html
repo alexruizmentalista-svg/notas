@@ -60,6 +60,12 @@
   .pal { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; background: var(--card); border-radius: 24px; padding: 12px 10px; box-shadow: 0 4px 16px rgba(80,60,30,.07); }
   .sw { width: 38px; height: 38px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); position: relative; transition: transform .12s; }
   .sw.on { transform: scale(1.12); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
+  .sw.more { background: conic-gradient(#E53935, #FDD835, #43A047, #26C6DA, #1E88E5, #8E24AA, #F06292, #E53935); }
+  .sw.more::after { content: '+'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 22px; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+  .sw.more.open::after { content: '–'; }
+  #palX { display: none; background: var(--card); border-radius: 24px; padding: 12px 10px; margin-bottom: 8px; box-shadow: 0 4px 16px rgba(80,60,30,.07); }
+  #palX.on { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; justify-items: center; }
+  #palX .sw { width: 34px; height: 34px; }
   @media (max-height: 700px){ .sw { width: 32px; height: 32px; } .pal { gap: 8px; padding: 10px; } }
 </style>
 </head>
@@ -88,6 +94,7 @@
       <button class="tool" id="tBrush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 10.5-10.5a2.1 2.1 0 00-3-3L5 16z"/></svg>Pincel</button>
     </div>
     <div class="cname" id="cname">Elige un color</div>
+    <div id="palX"></div>
     <div class="pal" id="pal"></div>
   </div>
 </section>
@@ -109,20 +116,51 @@
   }
   if (R && window.MQTTMini) net = new MQTTMini.Multi(BROKERS);   // conecta ya para que el primer color llegue al instante
 
-  // ---- Colores (los nombres son los del color match de Notas) ----
-  var COLORS = [
-    ['Rojo', '#E53935'], ['Naranja', '#FB8C00'], ['Amarillo', '#FDD835'], ['Verde', '#43A047'], ['Azul', '#1E88E5'], ['Morado', '#8E24AA'],
-    ['Rosa', '#F06292'], ['Marrón', '#795548'], ['Gris', '#9E9E9E'], ['Negro', '#212121'], ['Blanco', '#FFFFFF']
+  // ---- Colores: [nombre que se ve, color, familia (la del color match de Notas)] ----
+  var ALL = [
+    ['Rojo','#E53935','Rojo'], ['Granate','#8E1B1B','Rojo'], ['Coral','#FF7F6E','Rojo'],
+    ['Naranja','#FB8C00','Naranja'], ['Mandarina','#FFA726','Naranja'], ['Melocotón','#FFCC80','Naranja'],
+    ['Amarillo','#FDD835','Amarillo'], ['Limón','#FFF176','Amarillo'], ['Mostaza','#C9A227','Amarillo'],
+    ['Verde','#43A047','Verde'], ['Verde claro','#9CCC65','Verde'], ['Verde oscuro','#1B5E20','Verde'], ['Oliva','#827717','Verde'],
+    ['Azul','#1E88E5','Azul'], ['Celeste','#81D4FA','Azul'], ['Azul marino','#1A237E','Azul'], ['Turquesa','#26C6DA','Azul'],
+    ['Morado','#8E24AA','Morado'], ['Lila','#CE93D8','Morado'], ['Violeta','#5E35B1','Morado'],
+    ['Rosa','#F06292','Rosa'], ['Fucsia','#D81B60','Rosa'], ['Rosa palo','#F8BBD0','Rosa'],
+    ['Marrón','#795548','Marrón'], ['Beige','#D7C4A3','Marrón'], ['Chocolate','#4E342E','Marrón'],
+    ['Gris','#9E9E9E','Gris'], ['Gris claro','#CFD8DC','Gris'], ['Gris oscuro','#546E7A','Gris'],
+    ['Negro','#212121','Negro'], ['Blanco','#FFFFFF','Blanco']
   ];
+  function byName(n){ for (var i = 0; i < ALL.length; i++) if (ALL[i][0] === n) return ALL[i]; return null; }
+  var cfg = { force: '', fv: 0, basics: ['Rojo', 'Azul', 'Verde', 'Amarillo', 'Negro'] };
+  try { var sc = JSON.parse(localStorage.getItem('qsCfg') || 'null'); if (sc && sc.basics) cfg = sc; } catch(e){}
   var cur = null, tool = 'fill', drawing = null, undo = [], strokes = [], lastSent = '', lastT = 0;
   var $ = function(id){ return document.getElementById(id); };
+  var NET_CFG = R ? 'notasar/v1/' + R + '/cfg' : '';
+  if (net){
+    net.subscribe(NET_CFG);
+    net.onmessage = function(t, m){
+      if (!m || m.k !== 'qscfg') return;
+      cfg = { force: m.force || '', fv: m.fv || 0, basics: (m.basics && m.basics.length) ? m.basics : cfg.basics };
+      try { localStorage.setItem('qsCfg', JSON.stringify(cfg)); } catch(e){}
+      buildPal();
+    };
+    send({ k: 'hello' });
+  }
 
+  // ---- Forzaje: el primer dibujo que toque es el que ha elegido el mago (una vez por cada «armado») ----
+  function forced(){
+    if (!cfg.force) return null;
+    var used = ''; try { used = sessionStorage.getItem('qsUsed') || ''; } catch(e){}
+    if (used === String(cfg.fv)) return null;
+    var d = null; QS_DRAWINGS.forEach(function(x){ if (x.id === cfg.force) d = x; });
+    if (d) try { sessionStorage.setItem('qsUsed', String(cfg.fv)); } catch(e){}
+    return d;
+  }
   // ---- Galería ----
   var grid = $('grid');
   QS_DRAWINGS.forEach(function(d){
     var b = document.createElement('button'); b.className = 'tile';
     b.innerHTML = '<svg class="thumb" viewBox="0 0 300 300">' + d.svg + '</svg><div class="t">' + d.n + '</div>';
-    b.addEventListener('click', function(){ open(d); });
+    b.addEventListener('click', function(){ open(forced() || d); });
     grid.appendChild(b);
   });
   var blank = document.createElement('button'); blank.className = 'tile blank';
@@ -130,21 +168,31 @@
   blank.addEventListener('click', function(){ open({ id: 'blanco', n: 'Lienzo en blanco', svg: '' }); });
   grid.appendChild(blank);
 
-  // ---- Paleta ----
-  var pal = $('pal');
-  COLORS.forEach(function(c){
-    var s = document.createElement('button'); s.className = 'sw'; s.style.background = c[1]; s.setAttribute('aria-label', c[0]);
-    s.addEventListener('click', function(){ pick(c, s); });
-    pal.appendChild(s);
-  });
-  function pick(c, el){
-    cur = c;
-    [].forEach.call(pal.children, function(x){ x.classList.toggle('on', x === el); });
+  // ---- Paleta: abajo los básicos; «+» abre todos ----
+  var pal = $('pal'), palX = $('palX');
+  function swatch(c){
+    var b = document.createElement('button'); b.className = 'sw'; b.style.background = c[1]; b.setAttribute('aria-label', c[0]); b.dataset.n = c[0];
+    b.addEventListener('click', function(){ pick(c); if (b.parentNode === palX){ palX.classList.remove('on'); var m = pal.querySelector('.more'); if (m) m.classList.remove('open'); } });
+    return b;
+  }
+  function buildPal(){
+    pal.innerHTML = ''; palX.innerHTML = '';
+    cfg.basics.forEach(function(n){ var c = byName(n); if (c) pal.appendChild(swatch(c)); });
+    var more = document.createElement('button'); more.className = 'sw more' + (palX.classList.contains('on') ? ' open' : ''); more.setAttribute('aria-label', 'Más colores');
+    more.addEventListener('click', function(){ palX.classList.toggle('on'); more.classList.toggle('open', palX.classList.contains('on')); });
+    pal.appendChild(more);
+    ALL.forEach(function(c){ palX.appendChild(swatch(c)); });
+    mark();
+  }
+  function mark(){ [].forEach.call(document.querySelectorAll('.sw[data-n]'), function(x){ x.classList.toggle('on', !!cur && x.dataset.n === cur[0]); }); }
+  function pick(c){
+    cur = c; mark();
     $('cname').textContent = c[0];
     var now = Date.now();
-    if (c[0] !== lastSent || now - lastT > 1500){ send({ k: 'color', name: c[0], c: c[1] }); lastSent = c[0]; lastT = now; }
+    if (c[0] !== lastSent || now - lastT > 1500){ send({ k: 'color', name: c[2], label: c[0], c: c[1] }); lastSent = c[0]; lastT = now; }
     if (navigator.vibrate) try { navigator.vibrate(8); } catch(e){}
   }
+  buildPal();
 
   // ---- Editor ----
   var art = $('art'), cv = $('cv'), ctx = cv.getContext('2d'), paper = $('paper');
