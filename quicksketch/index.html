@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Quick Sketch">
+<meta name="theme-color" content="#FFF8EE">
+<title>Quick Sketch</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root { --bg: #FFF8EE; --ink: #1d1b19; --sub: #8a8178; --card: #ffffff; --accent: #FF6B4A; --line: #ece4d8; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Nunito", system-ui, sans-serif; -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
+  button { font: inherit; color: inherit; border: none; background: none; padding: 0; cursor: pointer; }
+  .screen { position: fixed; inset: 0; display: none; flex-direction: column; }
+  .screen.on { display: flex; }
+
+  /* Galería */
+  #gal { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 24px); display: block; }
+  #gal.on { display: block; }
+  .brand { display: flex; align-items: center; gap: 10px; margin: 4px 4px 4px; }
+  .logo { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #FF8A5B, #FF5E7E 55%, #8B5CF6); display: grid; place-items: center; box-shadow: 0 6px 16px rgba(255,94,126,.3); }
+  .logo svg { width: 24px; height: 24px; }
+  .brand h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.6px; margin: 0; }
+  .lead { color: var(--sub); font-size: 15px; margin: 6px 4px 18px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .tile { background: var(--card); border-radius: 20px; padding: 10px 10px 12px; box-shadow: 0 1px 0 rgba(0,0,0,.03), 0 6px 18px rgba(80,60,30,.06); text-align: center; }
+  .tile:active { transform: scale(.97); }
+  .tile svg { width: 100%; aspect-ratio: 1; display: block; }
+  .tile .t { font-size: 15px; font-weight: 700; margin-top: 4px; }
+  .tile.blank .pad { width: 100%; aspect-ratio: 1; border-radius: 14px; border: 2px dashed #e1d6c6; display: grid; place-items: center; color: #c4b6a2; font-size: 40px; font-weight: 300; }
+  .foot { color: #b9ad9c; font-size: 12px; text-align: center; margin-top: 22px; }
+
+  /* Editor */
+  #ed { background: var(--bg); }
+  .top { display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top) + 8px) 12px 6px; }
+  .ib { width: 42px; height: 42px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 2px 10px rgba(80,60,30,.08); }
+  .ib svg { width: 22px; height: 22px; }
+  .ib:disabled { opacity: .35; }
+  .top .ttl { flex: 1; text-align: center; font-weight: 800; font-size: 18px; letter-spacing: -0.3px; }
+  .stage { flex: 1; min-height: 0; display: grid; place-items: center; padding: 8px 14px; }
+  .paper { position: relative; width: min(100%, 62vh); aspect-ratio: 1; background: #fff; border-radius: 26px; box-shadow: 0 10px 30px rgba(80,60,30,.10); overflow: hidden; touch-action: none; }
+  .paper svg, .paper canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .paper canvas { pointer-events: none; }
+  .paper.brush canvas { pointer-events: auto; }
+  .art .r { fill: #fff; stroke: #1d1b19; stroke-width: 3.2; stroke-linejoin: round; transition: fill .18s; }
+  .art .l { fill: none; stroke: #1d1b19; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+  .thumb .r { fill: #fff; stroke: #1d1b19; stroke-width: 4; stroke-linejoin: round; }
+  .thumb .l { fill: none; stroke: #1d1b19; stroke-width: 4; stroke-linecap: round; }
+  .dock { padding: 8px 12px calc(env(safe-area-inset-bottom) + 12px); }
+  .tools { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+  .tool { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--card); font-weight: 700; font-size: 14px; box-shadow: 0 2px 10px rgba(80,60,30,.06); }
+  .tool svg { width: 18px; height: 18px; }
+  .tool.on { background: var(--ink); color: #fff; }
+  .cname { text-align: center; font-size: 13px; font-weight: 700; color: var(--sub); height: 18px; margin-bottom: 6px; letter-spacing: .2px; }
+  .pal { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; background: var(--card); border-radius: 24px; padding: 12px 10px; box-shadow: 0 4px 16px rgba(80,60,30,.07); }
+  .sw { width: 38px; height: 38px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); position: relative; transition: transform .12s; }
+  .sw.on { transform: scale(1.12); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
+  @media (max-height: 700px){ .sw { width: 32px; height: 32px; } .pal { gap: 8px; padding: 10px; } }
+</style>
+</head>
+<body>
+<section id="gal" class="screen on">
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 10.5-10.5a2.1 2.1 0 00-3-3L5 16z"/><path d="M14 7l3 3"/></svg></div>
+    <h1>Quick Sketch</h1>
+  </div>
+  <div class="lead">Elige un dibujo y coloréalo como quieras.</div>
+  <div class="grid" id="grid"></div>
+  <div class="foot">Quick Sketch · dibuja y colorea en segundos</div>
+</section>
+
+<section id="ed" class="screen">
+  <div class="top">
+    <button class="ib" id="back" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="#1d1b19" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l-8 8 8 8"/></svg></button>
+    <div class="ttl" id="ttl">Dibujo</div>
+    <button class="ib" id="undo" aria-label="Deshacer"><svg viewBox="0 0 24 24" fill="none" stroke="#1d1b19" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5L4 10l5 5"/><path d="M4.5 10H14a6 6 0 010 12h-3"/></svg></button>
+    <button class="ib" id="clear" aria-label="Borrar"><svg viewBox="0 0 24 24" fill="none" stroke="#1d1b19" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+  </div>
+  <div class="stage"><div class="paper" id="paper"><svg id="art" class="art" viewBox="0 0 300 300"></svg><canvas id="cv" width="900" height="900"></canvas></div></div>
+  <div class="dock">
+    <div class="tools">
+      <button class="tool on" id="tFill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l7-7 7 7-7 7z"/><path d="M19 15c0 2 1.5 3 1.5 4.5a1.5 1.5 0 01-3 0C17.5 18 19 17 19 15z"/></svg>Rellenar</button>
+      <button class="tool" id="tBrush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 10.5-10.5a2.1 2.1 0 00-3-3L5 16z"/></svg>Pincel</button>
+    </div>
+    <div class="cname" id="cname">Elige un color</div>
+    <div class="pal" id="pal"></div>
+  </div>
+</section>
+
+<script src="mqttmini.js"></script>
+<script src="drawings.js"></script>
+<script>
+(function(){
+  // ---- Conexión con Notas (mismo canal que el espectador a distancia) ----
+  var R = null;
+  try { R = new URLSearchParams(location.search).get('r'); if (R && /^[A-Za-z0-9]{4,16}$/.test(R)) localStorage.setItem('qsR', R); else R = localStorage.getItem('qsR'); } catch(e){}
+  var BROKERS = ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt'];
+  var net = null;
+  function dev(){ var d = ''; try { d = localStorage.getItem('qsDev') || ''; } catch(e){} if (!d){ d = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); try { localStorage.setItem('qsDev', d); } catch(e){} } return d; }
+  function send(o){
+    if (!R || !window.MQTTMini) return;
+    if (!net) net = new MQTTMini.Multi(BROKERS);
+    try { o.d = dev(); net.publish('notasar/v1/' + R, o); } catch(e){}
+  }
+  if (R && window.MQTTMini) net = new MQTTMini.Multi(BROKERS);   // conecta ya para que el primer color llegue al instante
+
+  // ---- Colores (los nombres son los del color match de Notas) ----
+  var COLORS = [
+    ['Rojo', '#E53935'], ['Naranja', '#FB8C00'], ['Amarillo', '#FDD835'], ['Verde', '#43A047'], ['Azul', '#1E88E5'], ['Morado', '#8E24AA'],
+    ['Rosa', '#F06292'], ['Marrón', '#795548'], ['Gris', '#9E9E9E'], ['Negro', '#212121'], ['Blanco', '#FFFFFF']
+  ];
+  var cur = null, tool = 'fill', drawing = null, undo = [], strokes = [], lastSent = '', lastT = 0;
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ---- Galería ----
+  var grid = $('grid');
+  QS_DRAWINGS.forEach(function(d){
+    var b = document.createElement('button'); b.className = 'tile';
+    b.innerHTML = '<svg class="thumb" viewBox="0 0 300 300">' + d.svg + '</svg><div class="t">' + d.n + '</div>';
+    b.addEventListener('click', function(){ open(d); });
+    grid.appendChild(b);
+  });
+  var blank = document.createElement('button'); blank.className = 'tile blank';
+  blank.innerHTML = '<div class="pad">+</div><div class="t">Lienzo en blanco</div>';
+  blank.addEventListener('click', function(){ open({ id: 'blanco', n: 'Lienzo en blanco', svg: '' }); });
+  grid.appendChild(blank);
+
+  // ---- Paleta ----
+  var pal = $('pal');
+  COLORS.forEach(function(c){
+    var s = document.createElement('button'); s.className = 'sw'; s.style.background = c[1]; s.setAttribute('aria-label', c[0]);
+    s.addEventListener('click', function(){ pick(c, s); });
+    pal.appendChild(s);
+  });
+  function pick(c, el){
+    cur = c;
+    [].forEach.call(pal.children, function(x){ x.classList.toggle('on', x === el); });
+    $('cname').textContent = c[0];
+    var now = Date.now();
+    if (c[0] !== lastSent || now - lastT > 1500){ send({ k: 'color', name: c[0], c: c[1] }); lastSent = c[0]; lastT = now; }
+    if (navigator.vibrate) try { navigator.vibrate(8); } catch(e){}
+  }
+
+  // ---- Editor ----
+  var art = $('art'), cv = $('cv'), ctx = cv.getContext('2d'), paper = $('paper');
+  function open(d){
+    drawing = d; undo = []; strokes = []; redraw();
+    art.innerHTML = d.svg;
+    $('ttl').textContent = d.n;
+    [].forEach.call(art.querySelectorAll('.r'), function(el){
+      el.addEventListener('click', function(){
+        if (tool !== 'fill') return;
+        if (!cur){ flashName(); return; }
+        var prev = el.style.fill || '';
+        if (prev === cur[1]) return;
+        undo.push({ t: 'fill', el: el, prev: prev });
+        el.style.fill = cur[1];
+      });
+    });
+    setTool(d.svg ? 'fill' : 'brush');
+    $('gal').classList.remove('on'); $('ed').classList.add('on');
+    send({ k: 'picks', app: 'Quick Sketch', t: 'Dibujo', items: [d.n] });
+  }
+  function flashName(){ var n = $('cname'); n.textContent = 'Primero elige un color'; n.style.color = '#FF6B4A'; setTimeout(function(){ n.style.color = ''; if (!cur) n.textContent = 'Elige un color'; }, 1200); }
+  function setTool(t){
+    tool = t;
+    $('tFill').classList.toggle('on', t === 'fill'); $('tBrush').classList.toggle('on', t === 'brush');
+    paper.classList.toggle('brush', t === 'brush');
+  }
+  $('tFill').addEventListener('click', function(){ setTool('fill'); });
+  $('tBrush').addEventListener('click', function(){ setTool('brush'); });
+  $('back').addEventListener('click', function(){ $('ed').classList.remove('on'); $('gal').classList.add('on'); });
+  $('undo').addEventListener('click', function(){
+    var u = undo.pop(); if (!u) return;
+    if (u.t === 'fill') u.el.style.fill = u.prev; else { strokes.pop(); redraw(); }
+  });
+  $('clear').addEventListener('click', function(){
+    [].forEach.call(art.querySelectorAll('.r'), function(el){ el.style.fill = ''; });
+    strokes = []; undo = []; redraw();
+  });
+
+  // Pincel
+  function redraw(){
+    ctx.clearRect(0, 0, cv.width, cv.height); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    strokes.forEach(function(s){
+      ctx.strokeStyle = s.c; ctx.lineWidth = 18; ctx.beginPath();
+      s.p.forEach(function(p, i){ if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); });
+      if (s.p.length === 1) ctx.lineTo(s.p[0][0] + .1, s.p[0][1]);
+      ctx.stroke();
+    });
+  }
+  var drawingNow = null;
+  function pt(e){ var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; }
+  cv.addEventListener('pointerdown', function(e){
+    if (tool !== 'brush') return;
+    if (!cur){ flashName(); return; }
+    cv.setPointerCapture(e.pointerId);
+    drawingNow = { c: cur[1], p: [pt(e)] }; strokes.push(drawingNow); undo.push({ t: 'stroke' }); redraw();
+  });
+  cv.addEventListener('pointermove', function(e){ if (!drawingNow) return; drawingNow.p.push(pt(e)); redraw(); });
+  ['pointerup', 'pointercancel'].forEach(function(ev){ cv.addEventListener(ev, function(){ drawingNow = null; }); });
+
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+})();
+</script>
+</body>
+</html>
