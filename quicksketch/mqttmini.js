@@ -60,8 +60,8 @@
     this._send(packet(8, 2, cat(new Uint8Array([id >> 8, id & 255]), strField(topic), new Uint8Array([0]))));
   };
   Client.prototype.subscribe = function(topic){ if (this.subs.indexOf(topic) === -1) this.subs.push(topic); if (this.ok) this._sub(topic); };
-  Client.prototype.publish = function(topic, msg){
-    const p = packet(3, 0, cat(strField(topic), enc(msg)));
+  Client.prototype.publish = function(topic, msg, retain){
+    const p = packet(3, retain ? 1 : 0, cat(strField(topic), enc(msg)));
     if (this.ok) this._send(p); else { this.queue.push(p); if (this.queue.length > 60) this.queue.shift(); }
   };
   Client.prototype.close = function(){ this.closed = true; clearInterval(this.ping); clearTimeout(this.rt); try { this.ws.close(); } catch(e){} };
@@ -80,9 +80,9 @@
     });
   }
   Multi.prototype.subscribe = function(t){ this.clients.forEach(function(c){ c.subscribe(t); }); };
-  Multi.prototype.publish = function(t, obj){
+  Multi.prototype.publish = function(t, obj, retain){
     obj._m = obj._m || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7));
-    const s = JSON.stringify(obj); this.clients.forEach(function(c){ c.publish(t, s); });
+    const s = JSON.stringify(obj); this.clients.forEach(function(c){ c.publish(t, s, retain); });
   };
   Multi.prototype.connected = function(){ return this.clients.filter(function(x){ return x.ok; }).length; };
   Multi.prototype.close = function(){ this.clients.forEach(function(c){ c.close(); }); };
