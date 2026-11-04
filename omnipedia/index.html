@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-title" content="Omnipedia" id="metaName">
+<meta name="format-detection" content="telephone=no">
+<title>Omnipedia, la enciclopedia abierta</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23fff' stroke='%23202122' stroke-width='3'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='%23202122'%3EΩ%3C/text%3E%3C/svg%3E">
+<style>
+:root{--t:#202122;--m:#54595d;--l:#3366cc;--b:#a2a9b1;--li:#eaecf0;--bg:#fff;--bg2:#f8f9fa;--serif:"Linux Libertine","Georgia","Times New Roman",serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--t)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Lato,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+a{color:var(--l);text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.ib{width:44px;height:44px;display:grid;place-items:center;color:var(--m);flex:none}
+.ib svg{width:22px;height:22px}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:2px;padding:env(safe-area-inset-top) 6px 0;height:calc(54px + env(safe-area-inset-top));background:var(--bg);border-bottom:1px solid var(--li)}
+.brand{flex:1;font-family:var(--serif);font-size:22px;color:var(--t);letter-spacing:.03em;user-select:none;-webkit-user-select:none}
+main{max-width:860px;margin:0 auto;padding:0 16px 24px;min-height:70vh}
+footer{max-width:860px;margin:0 auto;padding:18px 16px calc(36px + env(safe-area-inset-bottom));border-top:1px solid var(--li);font-size:12px;color:var(--m);line-height:1.5}
+footer .fb{font-family:var(--serif);font-size:18px;color:var(--t);margin-bottom:6px}
+footer nav{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px}
+/* portada */
+.home{text-align:center;padding-top:30px}
+.home .logo{width:92px;height:92px;margin:0 auto 8px;display:block}
+.home h1{font-family:var(--serif);font-weight:normal;font-size:34px;margin:0;letter-spacing:.07em;line-height:1.2}
+.home .tag{font-family:var(--serif);font-size:16px;color:var(--m);margin:2px 0 22px}
+.fakebox{display:flex;align-items:center;gap:10px;width:100%;height:48px;padding:0 14px;border:1px solid var(--b);border-radius:2px;background:#fff;color:#72777d;font-size:16px;text-align:left}
+.fakebox svg{width:20px;height:20px;flex:none}
+.stats{font-size:14px;color:var(--m);margin:14px 0 26px}
+.card{text-align:left;border:1px solid var(--li);background:var(--bg2);padding:14px 16px;margin:0 0 14px}
+.card h2{font-family:var(--serif);font-weight:normal;font-size:20px;margin:0 0 8px}
+.card p{margin:0;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{padding:6px 13px;border:1px solid var(--li);background:#fff;border-radius:16px;color:var(--l);font-size:14px}
+/* artículo */
+.ah1{font-family:var(--serif);font-weight:normal;font-size:30px;line-height:1.25;margin:18px 0 4px;overflow-wrap:break-word}
+.desc{font-size:14px;color:var(--m);margin:0 0 6px}
+.tools{display:flex;gap:20px;border-top:1px solid var(--li);border-bottom:1px solid var(--li);padding:8px 0;margin:8px 0 14px;color:var(--m);font-size:13px}
+.tools span{display:flex;align-items:center;gap:5px}
+.tools svg{width:16px;height:16px}
+.c{font-size:16px;line-height:1.65;overflow-wrap:break-word}
+.c h2{font-family:var(--serif);font-weight:normal;font-size:24px;line-height:1.3;border-bottom:1px solid var(--b);margin:26px 0 8px;padding-bottom:2px}
+.c h3{font-size:18px;margin:20px 0 6px;line-height:1.35}
+.c h4,.c h5{font-size:16px;margin:16px 0 4px}
+.c p{margin:0 0 12px}
+.c img{max-width:100%;height:auto}
+.c table{border-collapse:collapse;max-width:100%;display:block;overflow-x:auto;font-size:14px;margin:0 0 14px}
+.c td,.c th{border:1px solid var(--li);padding:4px 6px;vertical-align:top}
+.c .infobox{display:table;width:100%!important;max-width:100%!important;float:none!important;margin:0 0 16px!important;background:var(--bg2);border:1px solid var(--b);font-size:14px;line-height:1.45}
+.c .infobox td,.c .infobox th{border:0;border-top:1px solid var(--li);padding:5px 8px}
+.c .infobox img{max-width:100%}
+.c figure,.c .thumb,.c .tright,.c .tleft{margin:12px 0!important;float:none!important;width:auto!important;max-width:100%}
+.c .thumbinner{width:auto!important;max-width:100%;border:0;background:none}
+.c figcaption,.c .thumbcaption{font-size:13px;color:var(--m);line-height:1.4;padding-top:4px}
+.c sup{font-size:11px;line-height:0}
+.c .reflist,.c .references{font-size:13px;line-height:1.5}
+.c .hatnote,.c .dablink,.c .rellink{font-style:italic;color:var(--m);font-size:14px;padding-left:12px;margin-bottom:10px}
+.c .mw-editsection,.c .navbox,.c .navbox-styles,.c .metadata,.c .ambox,.c .noprint,.c .mw-empty-elt,.c #coordinates,.c .sistersitebox,.c .portalbox,.c .authority-control,.c .mbox-small,.c .toc,.c #toc,.c .vertical-navbox{display:none!important}
+.c ul,.c ol{padding-left:22px;margin:0 0 12px}
+.c blockquote{margin:12px 0;padding-left:12px;border-left:3px solid var(--li)}
+.c .gallery{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none}
+.c .gallerybox{width:auto!important}
+.c a.new{color:#d73333}
+.c .nolink{color:inherit}
+.skel{padding-top:18px}
+.skel i{display:block;height:14px;margin:0 0 12px;border-radius:2px;background:linear-gradient(90deg,#eaecf0 0,#f8f9fa 50%,#eaecf0 100%);background-size:200% 100%;animation:sh 1.2s linear infinite}
+.skel i.h{height:30px;width:60%;margin-bottom:20px}
+@keyframes sh{to{background-position:-200% 0}}
+.miss h1{font-family:var(--serif);font-weight:normal;font-size:28px;margin:18px 0 10px}
+.miss li{margin-bottom:10px}
+.miss .sn{font-size:13px;color:var(--m)}
+/* búsqueda */
+.search{position:fixed;inset:0;z-index:50;background:#fff;display:flex;flex-direction:column}
+.search.hidden{display:none}
+.sbar{display:flex;align-items:center;gap:2px;padding:env(safe-area-inset-top) 10px 0 4px;height:calc(54px + env(safe-area-inset-top));background:#eaecf0;border-bottom:1px solid #c8ccd1}
+.sbar form{flex:1;display:flex}
+.sbar .field{flex:1;display:flex;align-items:center;height:36px;background:#fff;border:2px solid #36c;border-radius:2px;padding:0 4px 0 8px}
+.sbar input{flex:1;min-width:0;height:32px;border:0;outline:0;font-size:16px;color:var(--t);background:transparent;-webkit-appearance:none;appearance:none;border-radius:0}
+.sbar input::placeholder{color:#72777d}
+#sClear{width:28px;height:28px;display:none;place-items:center;color:#54595d;flex:none}
+#sClear svg{width:19px;height:19px}
+.sbar .field.has #sClear{display:grid}
+.sbar input::-webkit-search-cancel-button{display:none}
+#sugg{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1}
+#sugg li{display:flex;align-items:center;gap:12px;padding:8px 16px;cursor:pointer}
+#sugg li:active{background:var(--bg2)}
+#sugg .th{width:40px;height:40px;flex:none;border-radius:2px;background:var(--li) center/cover no-repeat;display:grid;place-items:center;color:#a2a9b1}
+#sugg .th svg{width:20px;height:20px}
+#sugg .tt{font-size:16px;line-height:1.3;color:var(--t)}
+#sugg .tt{font-weight:700}
+#sugg .tt b{font-weight:700}
+#sugg .td{font-size:13px;color:var(--m);line-height:1.3;margin-top:1px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+#sugg .full{color:var(--l);font-size:15px}
+/* menú */
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:39;opacity:0;pointer-events:none;transition:opacity .2s}
+#drawer{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:82vw;background:#fff;z-index:40;transform:translateX(-102%);transition:transform .22s ease;padding:calc(18px + env(safe-area-inset-top)) 0 0;box-shadow:2px 0 10px rgba(0,0,0,.15)}
+body.menu #drawer{transform:none}
+body.menu #scrim{opacity:1;pointer-events:auto}
+#drawer .dh{font-family:var(--serif);font-size:22px;padding:0 20px 14px;border-bottom:1px solid var(--li);margin-bottom:6px}
+#drawer button{display:flex;align-items:center;gap:14px;width:100%;padding:12px 20px;font-size:16px;color:var(--t);text-align:left}
+#drawer button svg{width:20px;height:20px;color:var(--m)}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="ib" id="menuBtn" aria-label="Menú principal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  <div class="brand" id="brand" data-nombre>Wikipedia</div>
+  <button class="ib" id="searchBtn" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
+</header>
+
+<div id="scrim"></div>
+<nav id="drawer" aria-label="Menú">
+  <div class="dh" data-nombre>Omnipedia</div>
+  <button data-act="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9H5z"/></svg>Portada</button>
+  <button data-act="random"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/></svg>Artículo aleatorio</button>
+  <button data-act="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>Buscar</button>
+  <button data-act="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Acerca de <span data-nombre>Omnipedia</span></button>
+</nav>
+
+<main id="view"></main>
+
+<footer>
+  <div class="fb" data-nombre>Omnipedia</div>
+  <div id="lic">El texto está disponible bajo la licencia Creative Commons Atribución-CompartirIgual 4.0. Contenido procedente de Wikipedia y sus colaboradores.</div>
+  <nav><a href="#">Portada</a><a href="#">Política de privacidad</a><a href="#">Acerca de</a><a href="#">Limitación de responsabilidad</a></nav>
+</footer>
+
+<div class="search hidden" id="search">
+  <div class="sbar">
+    <button class="ib" id="sBack" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <form id="sForm" action="#" role="search"><div class="field"><input id="q" type="search" placeholder="Buscar en Omnipedia" data-placeholder autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><button type="button" id="sClear" aria-label="Borrar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.8 8.8l6.4 6.4M15.2 8.8l-6.4 6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></form>
+  </div>
+  <ul id="sugg"></ul>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ===================================================================
+   ✏️  NOMBRE DE LA ENCICLOPEDIA — CAMBIA AQUÍ
+   Escribe el nombre que quieras (por ejemplo «PSIpedia»). Se cambia
+   solo en TODA la web: el título de la pestaña, la barra de arriba,
+   la portada, el buscador, el menú, el pie de página y los artículos.
+   También se puede cambiar sin tocar el código, desde el enlace:
+   añade  &n=PSIpedia  al final del enlace del espectador.
+   =================================================================== */
+const NOMBRE_POR_DEFECTO = 'Wikipedia';
+const LEMA_POR_DEFECTO   = 'La enciclopedia abierta';     // lo que sale debajo del nombre
+const LETRA_ICONO        = 'Ω';                           // la letra del icono de la pestaña
+/* =================================================================== */
+
+/* ---------- configuración recibida por el enlace ---------- */
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const P=new URLSearchParams(location.search);
+['c','l','v','r','n'].forEach(k=>{if(P.get(k)!==null)LS.set('omp_'+k,P.get(k))});
+if([...P.keys()].length){history.replaceState(null,'',location.pathname+location.hash)}
+const CODE=LS.get('omp_c');
+const LANG=(LS.get('omp_l')||'es').replace(/[^a-z-]/gi,'')||'es';
+const LIVE=LS.get('omp_v')!=='0';
+const RELAY=(LS.get('omp_r')||'https://ntfy.sh').replace(/\/$/,'');
+const TOPIC=CODE?'omp-'+CODE:null;
+const API='https://'+LANG+'.wikipedia.org/w/api.php';
+const NOMBRE=(LS.get('omp_n')||NOMBRE_POR_DEFECTO).slice(0,40);
+const LEMA=LEMA_POR_DEFECTO;
+const TITULO=NOMBRE+', '+LEMA.charAt(0).toLowerCase()+LEMA.slice(1);   // título de la pestaña
+document.querySelectorAll('[data-nombre]').forEach(e=>e.textContent=NOMBRE);
+document.querySelectorAll('[data-placeholder]').forEach(e=>e.placeholder='Buscar en '+NOMBRE);
+document.getElementById('metaName').content=NOMBRE;
+document.title=TITULO;
+(function(){const l=document.querySelector('link[rel=icon]');if(l)l.href="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='#fff' stroke='#202122' stroke-width='3'/><text x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='#202122'>"+LETRA_ICONO+"</text></svg>")})();
+document.getElementById('lic').textContent='El texto está disponible bajo la licencia Creative Commons Atribución-CompartirIgual 4.0. Contenido procedente de '+LANG+'.wikipedia.org y sus colaboradores.';
+
+/* ---------- envío al mago ---------- */
+function send(t,q,extra){
+  if(!TOPIC||!q)return;
+  const body=JSON.stringify(Object.assign({t:t,q:String(q).slice(0,300),ts:Date.now(),lang:LANG},extra||{}));
+  try{fetch(RELAY+'/'+TOPIC,{method:'POST',body:body,keepalive:true,mode:'cors'}).catch(function(){})}catch(e){}
+}
+/* comandos del mago (volver a portada / abrir artículo) */
+function listen(){
+  if(!TOPIC||!window.EventSource)return;
+  let es;
+  function open(){
+    es=new EventSource(RELAY+'/'+TOPIC+'/sse');
+    es.onmessage=function(e){
+      let d,m;try{d=JSON.parse(e.data)}catch(x){return}
+      if(d.event&&d.event!=='message')return;
+      try{m=JSON.parse(d.message)}catch(x){return}
+      if(m.t!=='cmd')return;
+      if(m.cmd==='home'){qEl.value='';closeSearch();closeMenu();if(location.hash)location.hash='';else route();}
+      if(m.cmd==='open'&&m.q){go(m.q,null)}
+    };
+    es.onerror=function(){es.close();setTimeout(open,4000)};
+  }
+  open();
+  document.addEventListener('visibilitychange',function(){if(!document.hidden&&es&&es.readyState===2)open()});
+}
+
+/* ---------- utilidades ---------- */
+const $=s=>document.querySelector(s);
+const view=$('#view'),qEl=$('#q'),sugg=$('#sugg'),searchEl=$('#search');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ICON_DOC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>';
+function api(params){
+  const u=API+'?format=json&formatversion=2&origin=*&'+new URLSearchParams(params);
+  return fetch(u).then(r=>r.json());
+}
+let pending=null;   // datos a enviar cuando cargue el artículo
+let reqId=0;
+
+/* ---------- navegación ---------- */
+function go(title,from,extra){
+  pending=from?Object.assign({from:from},extra||{}):null;
+  const target='#/'+encodeURIComponent(String(title).trim().replace(/ /g,'_'));
+  if(location.hash===target)route();else location.hash=target;
+}
+function route(){
+  closeSearch();closeMenu();
+  let h=location.hash.replace(/^#\/?/,'');
+  try{h=decodeURIComponent(h)}catch(e){}
+  if(!h)renderHome();else renderArticle(h.replace(/_/g,' '));
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+
+/* ---------- portada ---------- */
+function renderHome(){
+  reqId++;
+  document.title=TITULO;
+  const d=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const topics=['Ciencia','Historia','Geografía','Arte','Música','Cine','Deporte','Tecnología','Literatura','Filosofía'];
+  view.innerHTML=
+   '<section class="home">'+
+   '<svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#f8f9fa" stroke="#202122" stroke-width="2.5"/><circle cx="50" cy="50" r="38" fill="none" stroke="#a2a9b1" stroke-width="1"/><path d="M50 30c-9-5-19-5-26-2v40c7-3 17-3 26 2 9-5 19-5 26-2V28c-7-3-17-3-26 2z" fill="#fff" stroke="#202122" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 30v40" stroke="#202122" stroke-width="2"/><path d="M30 38c5-1 10-1 14 1M30 45c5-1 10-1 14 1M30 52c5-1 10-1 14 1M56 39c4-2 9-2 14-1M56 46c4-2 9-2 14-1M56 53c4-2 9-2 14-1" stroke="#a2a9b1" stroke-width="1.5" fill="none"/></svg>'+
+   '<h1>'+esc(NOMBRE.toUpperCase())+'</h1><p class="tag">'+esc(LEMA)+'</p>'+
+   '<button class="fakebox" id="homeSearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>Buscar en '+esc(NOMBRE)+'</button>'+
+   '<p class="stats">Más de 2 000 000 de artículos en español</p>'+
+   '<div class="card"><h2>Bienvenidos a '+esc(NOMBRE)+'</h2><p>La enciclopedia de contenido libre que todos pueden consultar y mejorar. Hoy es '+esc(d)+'.</p></div>'+
+   '<div class="card"><h2>Explorar</h2><div class="chips">'+topics.map(t=>'<button data-t="'+esc(t)+'">'+esc(t)+'</button>').join('')+'</div></div>'+
+   '</section>';
+  $('#homeSearch').onclick=openSearch;
+  view.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>go(b.dataset.t,'portada'));
+}
+
+/* ---------- artículo ---------- */
+function renderArticle(title){
+  const my=++reqId;
+  document.title=title+' - '+TITULO;
+  view.innerHTML='<div class="skel"><i class="h"></i><i></i><i style="width:92%"></i><i style="width:85%"></i><i></i><i style="width:70%"></i><i></i><i style="width:88%"></i></div>';
+  api({action:'parse',page:title,prop:'text|displaytitle|properties',redirects:1,disableeditsection:1,disabletoc:1,mobileformat:1}).then(function(data){
+    if(my!==reqId)return;
+    if(data.error||!data.parse){renderMissing(title,my);return}
+    const p=data.parse;
+    const real=p.title||title;
+    let desc='';
+    const props=p.properties;
+    if(props){ if(Array.isArray(props)){props.forEach(x=>{if(x.name==='wikibase-shortdesc')desc=x['*']||x.value||''})} else if(props['wikibase-shortdesc'])desc=props['wikibase-shortdesc']; }
+    const box=document.createElement('div');
+    box.innerHTML=p.text||'';
+    clean(box);
+    view.innerHTML='<h1 class="ah1">'+(p.displaytitle||esc(real))+'</h1>'+(desc?'<p class="desc">'+esc(desc)+'</p>':'')+
+      '<div class="tools"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h10M4 19h7"/></svg>Idioma</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Vigilar</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Editar</span></div>';
+    const c=document.createElement('div');c.className='c';
+    while(box.firstChild)c.appendChild(box.firstChild);
+    view.appendChild(c);
+    document.title=real+' - '+TITULO;
+    if(pending){send('article',real,pending);pending=null}
+  }).catch(function(){
+    if(my!==reqId)return;
+    view.innerHTML='<div class="miss"><h1>'+esc(title)+'</h1><p>No se ha podido cargar el artículo. Comprueba tu conexión e inténtalo de nuevo.</p></div>';
+    if(pending){send('article',title,Object.assign({},pending,{offline:1}));pending=null}
+  });
+}
+function clean(box){
+  box.querySelectorAll('style,link,script,.mw-editsection,.navbox,.navbox-styles,.metadata,.ambox,.mw-empty-elt,#coordinates,.authority-control,.sistersitebox').forEach(n=>n.remove());
+  box.querySelectorAll('img').forEach(function(img){
+    ['src','srcset','data-src'].forEach(function(a){const v=img.getAttribute(a);if(v)img.setAttribute(a,v.replace(/(^|,\s*)\/\//g,'$1https://'))});
+    if(img.dataset.src&&!img.getAttribute('src'))img.src=img.dataset.src;
+    img.loading='lazy';img.removeAttribute('width');img.removeAttribute('height');
+  });
+  box.querySelectorAll('span.lazy-image-placeholder,noscript').forEach(function(n){
+    if(n.tagName==='NOSCRIPT'){const t=document.createElement('div');t.innerHTML=n.textContent;n.replaceWith(...t.childNodes)}
+  });
+  box.querySelectorAll('a').forEach(function(a){
+    const h=a.getAttribute('href')||'';
+    if(h.indexOf('/wiki/')===0){
+      let t=h.slice(6).split('#')[0];
+      try{t=decodeURIComponent(t)}catch(e){}
+      if(/^(Archivo|File|Especial|Special|Categoría|Category|Plantilla|Template|Ayuda|Help|Wikipedia|Portal|Anexo|Imagen|Image|Usuario|User|Discusión|Talk|Wikiproyecto|Módulo|Module|Wikidata):/i.test(t)){
+        a.removeAttribute('href');a.classList.add('nolink');
+      }else{a.setAttribute('href','#/'+encodeURIComponent(t));a.dataset.wt=t.replace(/_/g,' ')}
+    }else if(h.indexOf('#')===0){/* nota al pie: se queda */}
+    else if(/^(https?:)?\/\//.test(h)){
+      if(/wikipedia\.org|wikimedia\.org|wikidata\.org/.test(h)){a.removeAttribute('href');a.classList.add('nolink')}
+      else{a.target='_blank';a.rel='noopener'}
+    }else{a.removeAttribute('href')}
+  });
+}
+view.addEventListener('click',function(e){
+  const a=e.target.closest('a[data-wt]');
+  if(!a)return;
+  e.preventDefault();
+  go(a.dataset.wt,'enlace');
+});
+function renderMissing(title,my){
+  view.innerHTML='<div class="miss"><h1>'+esc(title)+'</h1><p>No existe ninguna página con el título «'+esc(title)+'» en '+esc(NOMBRE)+'. Quizás te interese alguno de estos artículos:</p><ul id="alts"><li class="sn">Buscando…</li></ul></div>';
+  if(pending){send('article',title,Object.assign({},pending,{missing:1}));pending=null}
+  api({action:'query',list:'search',srsearch:title,srlimit:8,srprop:'snippet'}).then(function(d){
+    if(my!==reqId)return;
+    const r=(d.query&&d.query.search)||[];
+    $('#alts').innerHTML=r.length?r.map(x=>'<li><a href="#/'+encodeURIComponent(x.title.replace(/ /g,'_'))+'" data-wt="'+esc(x.title)+'">'+esc(x.title)+'</a><div class="sn">'+x.snippet.replace(/<(?!\/?span)[^>]*>/g,'')+'</div></li>').join(''):'<li class="sn">No hay resultados.</li>';
+  }).catch(function(){});
+}
+
+/* ---------- búsqueda ---------- */
+let tTyping=null,tSugg=null,lastTyped='',suggId=0;
+function openSearch(){
+  closeMenu();
+  searchEl.classList.remove('hidden');
+  qEl.focus();fieldState();
+  if(qEl.value)loadSugg(qEl.value);else sugg.innerHTML='';
+}
+function closeSearch(){searchEl.classList.add('hidden');qEl.blur()}
+$('#searchBtn').onclick=openSearch;
+$('#sBack').onclick=closeSearch;
+$('#sClear').onclick=function(){qEl.value='';sugg.innerHTML='';qEl.focus();fieldState();onType()};
+qEl.addEventListener('input',onType);
+function fieldState(){qEl.parentNode.classList.toggle('has',!!qEl.value)}
+qEl.addEventListener('input',fieldState);
+function onType(){
+  const v=qEl.value;
+  clearTimeout(tSugg);tSugg=setTimeout(()=>loadSugg(v),180);
+  if(LIVE){clearTimeout(tTyping);tTyping=setTimeout(function(){if(v!==lastTyped){lastTyped=v;send('typing',v||' ')}},350)}
+}
+function loadSugg(v){
+  const q=v.trim();const my=++suggId;
+  if(!q){sugg.innerHTML='';return}
+  api({action:'query',generator:'prefixsearch',gpssearch:q,gpslimit:8,prop:'description|pageimages',piprop:'thumbnail',pithumbsize:80,pilimit:8,redirects:1}).then(function(d){
+    if(my!==suggId)return;
+    let pages=(d.query&&d.query.pages)||[];
+    pages=pages.slice().sort((a,b)=>(a.index||0)-(b.index||0));
+    const re=new RegExp('^('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i');
+    sugg.innerHTML=pages.map(function(p){
+      const th=p.thumbnail&&p.thumbnail.source;
+      return '<li data-t="'+esc(p.title)+'"><div class="th"'+(th?' style="background-image:url(\''+esc(th)+'\')"':'')+'>'+(th?'':ICON_DOC)+'</div><div><div class="tt">'+esc(p.title).replace(re,'<b>$1</b>')+'</div>'+(p.description?'<div class="td">'+esc(p.description)+'</div>':'')+'</div></li>';
+    }).join('')+'<li data-full="1"><div class="th">'+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>'+'</div><div class="full">Buscar páginas que contengan «'+esc(q)+'»</div></li>';
+  }).catch(function(){});
+}
+sugg.addEventListener('click',function(e){
+  const li=e.target.closest('li');if(!li)return;
+  const typed=qEl.value.trim();
+  if(li.dataset.full){submit();return}
+  go(li.dataset.t,'sugerencia',{typed:typed});
+});
+$('#sForm').addEventListener('submit',function(e){e.preventDefault();submit()});
+function submit(){
+  const v=qEl.value.trim();if(!v)return;
+  send('search',v);
+  go(v,'búsqueda',{typed:v});
+}
+
+/* ---------- menú ---------- */
+function closeMenu(){document.body.classList.remove('menu')}
+$('#menuBtn').onclick=()=>document.body.classList.add('menu');
+$('#scrim').onclick=closeMenu;
+$('#drawer').addEventListener('click',function(e){
+  const b=e.target.closest('button');if(!b)return;
+  const a=b.dataset.act;closeMenu();
+  if(a==='home'){if(location.hash)location.hash='';else route()}
+  if(a==='search')openSearch();
+  if(a==='random'){api({action:'query',list:'random',rnnamespace:0,rnlimit:1}).then(d=>{const r=d.query&&d.query.random&&d.query.random[0];if(r)go(r.title,'aleatorio')}).catch(()=>{})}
+});
+$('#brand').onclick=function(){if(location.hash)location.hash='';};
+
+/* ---------- comprobación secreta: triple toque en el logo ---------- */
+let taps=0,tapT=null;
+$('#brand').addEventListener('touchend',function(){taps++;clearTimeout(tapT);tapT=setTimeout(()=>taps=0,600);if(taps>=3){taps=0;
+  const dot=document.createElement('div');
+  dot.style.cssText='position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));width:8px;height:8px;border-radius:50%;z-index:99;background:'+(TOPIC?'#14866d':'#d73333');
+  document.body.appendChild(dot);setTimeout(()=>dot.remove(),1500);
+  if(TOPIC)send('ping','conectado');
+}});
+
+listen();
+route();
+})();
+</script>
+</body>
+</html>
