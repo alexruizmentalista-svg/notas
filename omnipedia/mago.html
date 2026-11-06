@@ -256,10 +256,9 @@ function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');cl
 /* ---------- enlace ---------- */
 function baseUrl(){let b=(S.base||'').trim();if(b){if(!/^https?:\/\//.test(b))b='https://'+b;return b}return location.origin+location.pathname.replace(/[^/]*$/,'')}
 function specLink(){
-  const p=new URLSearchParams({c:code});
-  if(S.lang!=='es')p.set('l',S.lang);
-  if(!S.sendLive)p.set('v','0');
-  if(relay()!==DEF.relay)p.set('r',relay());
+  /* Van siempre todos: la web guarda cada valor en ese móvil y un ajuste que no viniera
+     en el enlace se quedaría con el de la vez anterior. Vacío = valor por defecto. */
+  const p=new URLSearchParams({c:code,l:S.lang,v:S.sendLive?'1':'0',r:relay()!==DEF.relay?relay():'',n:''});
   const b=baseUrl();return b+(b.indexOf('?')>-1?'&':'?')+p.toString();
 }
 function renderLink(){
@@ -271,7 +270,7 @@ function renderLink(){
 }
 $('#copyBtn').onclick=function(){const l=specLink();(navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>toast('Enlace copiado')).catch(()=>{const r=document.createRange();r.selectNodeContents($('#linkTxt'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Mantén pulsado para copiar')})};
 $('#shareBtn').onclick=function(){if(navigator.share)navigator.share({url:specLink()}).catch(()=>{});else $('#copyBtn').onclick()};
-$('#newCode').onclick=function(){const w=prompt('Código nuevo. Escribe uno tuyo (mínimo 6 letras o números, el mismo que pongas en Vistazos del reloj) o déjalo vacío para uno al azar. Los enlaces antiguos dejarán de funcionar.',''); if(w===null)return; const own=w.trim().toLowerCase().replace(/[^a-z0-9]/g,''); if(own&&own.length<6){alert('Mínimo 6 letras o números.');return} code=own||genCode();store.set('omr_code',code);lastId=null;renderLink();connect();toast('Nuevo código: '+code)};
+$('#newCode').onclick=function(){const w=prompt('Código nuevo. Escribe uno tuyo (mínimo 6 letras o números, el mismo que pongas en Vistazos del reloj) o déjalo vacío para uno al azar. Los enlaces antiguos dejarán de funcionar.',''); if(w===null)return; const own=w.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,60); if(own&&own.length<6){alert('Mínimo 6 letras o números.');return} code=own||genCode();store.set('omr_code',code);lastId=null;renderLink();connect();toast('Nuevo código: '+code)};
 
 /* ---------- conexión ---------- */
 let es=null,lastId=null,retryT=null;const seen=new Set();
