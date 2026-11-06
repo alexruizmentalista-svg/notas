@@ -149,7 +149,7 @@ body.menu #scrim{opacity:1;pointer-events:auto}
    También se puede cambiar sin tocar el código, desde el enlace:
    añade  &n=PSIpedia  al final del enlace del espectador.
    =================================================================== */
-const NOMBRE_POR_DEFECTO = 'Wikipedia';
+const NOMBRE_POR_DEFECTO = 'Omnipedia';
 const LEMA_POR_DEFECTO   = 'La enciclopedia abierta';     // lo que sale debajo del nombre
 const LETRA_ICONO        = 'Ω';                           // la letra del icono de la pestaña
 /* ✏️  LOGO: pon aquí el nombre de tu imagen (p. ej. 'logo.png') y súbela a la MISMA carpeta
@@ -239,7 +239,7 @@ function renderHome(){
   const topics=['Ciencia','Historia','Geografía','Arte','Música','Cine','Deporte','Tecnología','Literatura','Filosofía'];
   view.innerHTML=
    '<section class="home">'+
-   (LOGO_IMAGEN?'<img class="logo" src="'+esc(LOGO_IMAGEN)+'" alt="">':'<svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#f8f9fa" stroke="#202122" stroke-width="2.5"/><circle cx="50" cy="50" r="38" fill="none" stroke="#a2a9b1" stroke-width="1"/><path d="M50 30c-9-5-19-5-26-2v40c7-3 17-3 26 2 9-5 19-5 26-2V28c-7-3-17-3-26 2z" fill="#fff" stroke="#202122" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 30v40" stroke="#202122" stroke-width="2"/><path d="M30 38c5-1 10-1 14 1M30 45c5-1 10-1 14 1M30 52c5-1 10-1 14 1M56 39c4-2 9-2 14-1M56 46c4-2 9-2 14-1M56 53c4-2 9-2 14-1" stroke="#a2a9b1" stroke-width="1.5" fill="none"/></svg>')+
+   (LOGO_IMAGEN?'<img class="logo" src="'+esc(LOGO_IMAGEN)+'" alt="">':'<svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="43" fill="#fff" stroke="#202122" stroke-width="3"/><ellipse cx="50" cy="50" rx="17" ry="43" fill="none" stroke="#a2a9b1" stroke-width="1.6"/><line x1="7" y1="50" x2="93" y2="50" stroke="#a2a9b1" stroke-width="1.6"/><path d="M13 31H87M13 69H87" fill="none" stroke="#a2a9b1" stroke-width="1.6"/><text x="50" y="60" font-family="Georgia,serif" font-size="26" text-anchor="middle" fill="#202122">Ω</text></svg>')+
    '<h1>'+esc(NOMBRE.toUpperCase())+'</h1><p class="tag">'+esc(LEMA)+'</p>'+
    '<button class="fakebox" id="homeSearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>Buscar en '+esc(NOMBRE)+'</button>'+
    '<p class="stats">Más de 2 000 000 de artículos en español</p>'+
