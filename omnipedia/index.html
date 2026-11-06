@@ -25,7 +25,7 @@ footer .fb{font-family:var(--serif);font-size:18px;color:var(--t);margin-bottom:
 footer nav{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px}
 /* portada */
 .home{text-align:center;padding-top:30px}
-.home .logo{width:92px;height:92px;margin:0 auto 8px;display:block}
+.home .logo{width:92px;height:92px;margin:0 auto 8px;display:block;object-fit:contain}
 .home h1{font-family:var(--serif);font-weight:normal;font-size:34px;margin:0;letter-spacing:.07em;line-height:1.2}
 .home .tag{font-family:var(--serif);font-size:16px;color:var(--m);margin:2px 0 22px}
 .fakebox{display:flex;align-items:center;gap:10px;width:100%;height:48px;padding:0 14px;border:1px solid var(--b);border-radius:2px;background:#fff;color:#72777d;font-size:16px;text-align:left}
@@ -148,9 +148,12 @@ body.menu #scrim{opacity:1;pointer-events:auto}
    También se puede cambiar sin tocar el código, desde el enlace:
    añade  &n=PSIpedia  al final del enlace del espectador.
    =================================================================== */
-const NOMBRE_POR_DEFECTO = 'Wikipedia';
+const NOMBRE_POR_DEFECTO = 'Omnipedia';
 const LEMA_POR_DEFECTO   = 'La enciclopedia abierta';     // lo que sale debajo del nombre
 const LETRA_ICONO        = 'Ω';                           // la letra del icono de la pestaña
+/* ✏️  LOGO: pon aquí el nombre de tu imagen (p. ej. 'logo.png') y súbela a la MISMA carpeta
+   que este archivo. Mejor cuadrada y con fondo transparente (PNG). Vacío = el libro dibujado. */
+const LOGO_IMAGEN        = '';
 /* =================================================================== */
 
 /* ---------- configuración recibida por el enlace ---------- */
@@ -171,7 +174,7 @@ document.querySelectorAll('[data-nombre]').forEach(e=>e.textContent=NOMBRE);
 document.querySelectorAll('[data-placeholder]').forEach(e=>e.placeholder='Buscar en '+NOMBRE);
 document.getElementById('metaName').content=NOMBRE;
 document.title=TITULO;
-(function(){const l=document.querySelector('link[rel=icon]');if(l)l.href="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='#fff' stroke='#202122' stroke-width='3'/><text x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='#202122'>"+LETRA_ICONO+"</text></svg>")})();
+(function(){const l=document.querySelector('link[rel=icon]');if(l&&LOGO_IMAGEN){l.href=LOGO_IMAGEN;return}if(l)l.href="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='#fff' stroke='#202122' stroke-width='3'/><text x='32' y='44' font-family='Georgia' font-size='34' text-anchor='middle' fill='#202122'>"+LETRA_ICONO+"</text></svg>")})();
 document.getElementById('lic').textContent='El texto está disponible bajo la licencia Creative Commons Atribución-CompartirIgual 4.0. Contenido procedente de '+LANG+'.wikipedia.org y sus colaboradores.';
 
 /* ---------- envío al mago ---------- */
@@ -235,7 +238,7 @@ function renderHome(){
   const topics=['Ciencia','Historia','Geografía','Arte','Música','Cine','Deporte','Tecnología','Literatura','Filosofía'];
   view.innerHTML=
    '<section class="home">'+
-   '<svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#f8f9fa" stroke="#202122" stroke-width="2.5"/><circle cx="50" cy="50" r="38" fill="none" stroke="#a2a9b1" stroke-width="1"/><path d="M50 30c-9-5-19-5-26-2v40c7-3 17-3 26 2 9-5 19-5 26-2V28c-7-3-17-3-26 2z" fill="#fff" stroke="#202122" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 30v40" stroke="#202122" stroke-width="2"/><path d="M30 38c5-1 10-1 14 1M30 45c5-1 10-1 14 1M30 52c5-1 10-1 14 1M56 39c4-2 9-2 14-1M56 46c4-2 9-2 14-1M56 53c4-2 9-2 14-1" stroke="#a2a9b1" stroke-width="1.5" fill="none"/></svg>'+
+   (LOGO_IMAGEN?'<img class="logo" src="'+esc(LOGO_IMAGEN)+'" alt="">':'<svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#f8f9fa" stroke="#202122" stroke-width="2.5"/><circle cx="50" cy="50" r="38" fill="none" stroke="#a2a9b1" stroke-width="1"/><path d="M50 30c-9-5-19-5-26-2v40c7-3 17-3 26 2 9-5 19-5 26-2V28c-7-3-17-3-26 2z" fill="#fff" stroke="#202122" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 30v40" stroke="#202122" stroke-width="2"/><path d="M30 38c5-1 10-1 14 1M30 45c5-1 10-1 14 1M30 52c5-1 10-1 14 1M56 39c4-2 9-2 14-1M56 46c4-2 9-2 14-1M56 53c4-2 9-2 14-1" stroke="#a2a9b1" stroke-width="1.5" fill="none"/></svg>')+
    '<h1>'+esc(NOMBRE.toUpperCase())+'</h1><p class="tag">'+esc(LEMA)+'</p>'+
    '<button class="fakebox" id="homeSearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>Buscar en '+esc(NOMBRE)+'</button>'+
    '<p class="stats">Más de 2 000 000 de artículos en español</p>'+

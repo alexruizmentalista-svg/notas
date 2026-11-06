@@ -28,3 +28,9 @@ Lo que llega al reloj:
 ## Subir a Netlify
 Arrastra `enciclopedia-netlify.zip` (o la carpeta con index.html y mago.html) a Netlify Drop.
 Copias de antes de este cambio: `index.backup-prenombre.html`, `mago.backup-prenombre.html`.
+
+## Cambiar el logo
+En `index.html`, justo debajo del nombre, pon en `LOGO_IMAGEN` el nombre de tu imagen (p. ej. `'logo.png'`)
+y deja ese archivo en la misma carpeta (y súbelo también a la carpeta omnipedia de GitHub con
+Add file → Upload files). Mejor cuadrada y PNG con fondo transparente. Sale en la portada y en el
+icono de la pestaña. Vacío = el libro dibujado.
