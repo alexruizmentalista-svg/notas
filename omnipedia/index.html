@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-title" content="Omnipedia" id="metaName">
 <meta name="format-detection" content="telephone=no">
@@ -327,7 +328,7 @@ function openSearch(){
   qEl.focus();fieldState();
   if(qEl.value)loadSugg(qEl.value);else sugg.innerHTML='';
 }
-function closeSearch(){searchEl.classList.add('hidden');qEl.blur()}
+function closeSearch(){searchEl.classList.add('hidden');qEl.blur();clearTimeout(tSugg);clearTimeout(tTyping);qEl.value='';lastTyped='';sugg.innerHTML='';fieldState()}
 $('#searchBtn').onclick=openSearch;
 $('#sBack').onclick=closeSearch;
 $('#sClear').onclick=function(){qEl.value='';sugg.innerHTML='';qEl.focus();fieldState();onType()};
